@@ -1,5 +1,5 @@
 /**!
- * lg-zoom.js | 0.0.1 | July 30th 2016
+ * lg-zoom.js | 0.0.1 | August 1st 2016
  * http://sachinchoolur.github.io/lg-zoom.js
  * Copyright (c) 2016 Sachin N; 
  * @license Apache 2.0 
