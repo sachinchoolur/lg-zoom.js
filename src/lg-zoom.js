@@ -20,7 +20,7 @@ var Zoom = function(element) {
 
         // Set the initial value center
         this.pageX = window.innerWidth / 2;
-        this.pageY = (window.innerHeight / 2) + document.documentElement.scrollTop || document.body.scrollTop;
+        this.pageY = (window.innerHeight / 2) + (document.documentElement.scrollTop || document.body.scrollTop);
     }
 
     return this;
@@ -74,7 +74,7 @@ Zoom.prototype.init = function() {
 
         // Find offset manually to avoid issue after zoom
         var offsetX = (window.innerWidth - image.clientWidth) / 2;
-        var offsetY = ((window.innerHeight - image.clientHeight) / 2) + document.documentElement.scrollTop || document.body.scrollTop;
+        var offsetY = ((window.innerHeight - image.clientHeight) / 2) + (document.documentElement.scrollTop || document.body.scrollTop);
 
         _x = _this.pageX - offsetX;
         _y = _this.pageY - offsetY;
@@ -127,10 +127,10 @@ Zoom.prototype.init = function() {
 
         if (fromIcon) {
             _this.pageX = window.innerWidth / 2;
-            _this.pageY = (window.innerHeight / 2) + document.documentElement.scrollTop || document.body.scrollTop;
+            _this.pageY = (window.innerHeight / 2) + (document.documentElement.scrollTop || document.body.scrollTop);
         } else {
-            _this.pageX = event.pageX || event.originalEvent.targetTouches[0].pageX;
-            _this.pageY = event.pageY || event.originalEvent.targetTouches[0].pageY;
+            _this.pageX = event.pageX || event.targetTouches[0].pageX;
+            _this.pageY = event.pageY || event.targetTouches[0].pageY;
         }
 
         callScale();
@@ -150,30 +150,34 @@ Zoom.prototype.init = function() {
         // Get the current element
         var image = _this.core.___slide[index].querySelector('.lg-image');
 
-        utils.on(image, 'dblclick', function(event) {
-            actualSize(event, image, index);
-        });
-
-        utils.on(image, 'touchstart', function(event) {
-            if (!tapped) {
-                tapped = setTimeout(function() {
-                    tapped = null;
-                }, 300);
-            } else {
-                clearTimeout(tapped);
-                tapped = null;
+        if (!_this.core.isTouch) { 
+            utils.on(image, 'dblclick', function(event) {
                 actualSize(event, image, index);
-            }
+            });
+        }
 
-            event.preventDefault();
-        });
+        if (_this.core.isTouch) { 
+            utils.on(image, 'touchstart', function(event) {
+                if (!tapped) {
+                    tapped = setTimeout(function() {
+                        tapped = null;
+                    }, 300);
+                } else {
+                    clearTimeout(tapped);
+                    tapped = null;
+                    actualSize(event, image, index);
+                }
+
+                event.preventDefault();
+            });
+        }
 
     });
 
     // Update zoom on resize and orientationchange
     utils.on(window, 'resize.lgzoom scroll.lgzoom orientationchange.lgzoom', function() {
         _this.pageX = window.innerWidth / 2;
-        _this.pageY = (window.innerHeight / 2) + document.documentElement.scrollTop || document.body.scrollTop;
+        _this.pageY = (window.innerHeight / 2) + (document.documentElement.scrollTop || document.body.scrollTop);
         zoom(scale);
     });
 
@@ -232,7 +236,7 @@ Zoom.prototype.resetZoom = function() {
 
     // Reset pagx pagy values to center
     this.pageX = window.innerWidth / 2;
-    this.pageY = (window.innerHeight / 2) + document.documentElement.scrollTop || document.body.scrollTop;
+    this.pageY = (window.innerHeight / 2) + (document.documentElement.scrollTop || document.body.scrollTop);
 };
 
 Zoom.prototype.zoomSwipe = function() {
@@ -260,8 +264,8 @@ Zoom.prototype.zoomSwipe = function() {
                 if ((allowX || allowY)) {
                     e.preventDefault();
                     startCoords = {
-                        x: e.originalEvent.targetTouches[0].pageX,
-                        y: e.originalEvent.targetTouches[0].pageY
+                        x: e.targetTouches[0].pageX,
+                        y: e.targetTouches[0].pageY
                     };
                 }
             }
@@ -274,7 +278,7 @@ Zoom.prototype.zoomSwipe = function() {
         /*jshint loopfunc: true */
         utils.on(_this.core.___slide[j], 'touchmove.lg', function(e) {
 
-            if (_this.core.outer.hasClass('lg-zoomed')) {
+            if (utils.hasClass(_this.core.outer, 'lg-zoomed')) {
 
                 var _el = _this.core.___slide[_this.core.index].querySelector('.lg-img-wrap');
                 var distanceX;
@@ -284,8 +288,8 @@ Zoom.prototype.zoomSwipe = function() {
                 isMoved = true;
 
                 endCoords = {
-                    x: e.originalEvent.targetTouches[0].pageX,
-                    y: e.originalEvent.targetTouches[0].pageY
+                    x: e.targetTouches[0].pageX,
+                    y: e.targetTouches[0].pageY
                 };
 
                 // reset opacity and transition duration

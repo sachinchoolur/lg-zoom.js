@@ -1,6 +1,6 @@
 {
   "name": "lg-zoom.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Zoom module for lightgallery.",
   "keywords": [
     "gallery",
@@ -53,7 +53,7 @@
     "build-debug": "browserify src/lg-zoom.js -s LgZoom -t [babelify] -p [bannerify --file .banner ] -o dist/lg-zoom.js",
     "build-min": "uglifyjs dist/lg-zoom.js --comments '/@license/' -m screw_ie8=true -c screw_ie8=true,unused=false -o dist/lg-zoom.min.js",
     "build-watch": "watchify src/lg-zoom.js -s LgZoom -t [babelify] -o dist/lg-zoom.js -v",
-    "dev": "watchify src/lg-zoom.js -s LgZoom -t [babelify] -o ../lightgallery.js/lightgallery/js/lg-zoom.js -v",
+    "dev": "watchify src/lg-zoom.js -s LgZoom -t [babelify] -o ../lg/lightgallery.js/lightgallery/js/lg-zoom.js -v",
     "lint": "jshint src/*.js"
   }
 }
