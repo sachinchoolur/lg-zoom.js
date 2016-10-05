@@ -1,6 +1,6 @@
 {
   "name": "lg-zoom.js",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Zoom module for lightgallery.",
   "keywords": [
     "gallery",
@@ -21,7 +21,7 @@
   "bugs": {
     "url": "https://github.com/sachinchoolur/lg-zoom.js/issues"
   },
-  "license": "Apache-2.0",
+  "license": "GPLv3",
   "author": {
     "name": "Sachin N",
     "email": "sachi77n@gmail.com",
@@ -54,6 +54,6 @@
     "build-min": "uglifyjs dist/lg-zoom.js --comments '/@license/' -m screw_ie8=true -c screw_ie8=true,unused=false -o dist/lg-zoom.min.js",
     "build-watch": "watchify src/lg-zoom.js -s LgZoom -t [babelify] -o dist/lg-zoom.js -v",
     "dev": "watchify src/lg-zoom.js -s LgZoom -t [babelify] -o ../lg/lightgallery.js/lightgallery/js/lg-zoom.js -v",
-    "lint": "jshint src/*.js"
+    "lint": "jshint src"
   }
 }

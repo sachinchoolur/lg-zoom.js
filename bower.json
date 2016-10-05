@@ -1,6 +1,6 @@
 {
   "name": "lg-zoom.js",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Zoom module for lightgallery.",
   "main": [
       "dist/lg-zoom.min.js"
@@ -20,7 +20,7 @@
       "type": "git",
       "url": "git://github.com/sachinchoolur/lg-zoom.js.git"
   },
-  "license": "Apache-2.0",
+  "license": "GPLv3",
   "ignore": [
       "README.md"
   ]
