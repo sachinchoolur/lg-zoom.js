@@ -1,8 +1,19 @@
+var getUseLeft = function() {
+    var useLeft = false;
+    var isChrome = navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./);
+    if (isChrome && parseInt(isChrome[2], 10) < 54) {
+        useLeft = true;
+    }
+
+    return useLeft;
+};
+
 var zoomDefaults = {
     scale: 1,
     zoom: true,
     actualSize: true,
-    enableZoomAfter: 300
+    enableZoomAfter: 300,
+    useLeftForZoom: getUseLeft()
 };
 
 var Zoom = function(element) {
@@ -33,6 +44,13 @@ Zoom.prototype.init = function() {
 
     if (_this.core.s.actualSize) {
         zoomIcons += '<span id="lg-actual-size" class="lg-icon"></span>';
+    }
+
+
+    if (_this.core.s.useLeftForZoom) {
+        utils.addClass(_this.core.outer, 'lg-use-left-for-zoom');
+    } else {
+        utils.addClass(_this.core.outer, 'lg-use-transition-for-zoom');
     }
 
     this.core.outer.querySelector('.lg-toolbar').insertAdjacentHTML('beforeend', zoomIcons);
@@ -85,8 +103,13 @@ Zoom.prototype.init = function() {
         utils.setVendor(image, 'Transform', 'scale3d(' + scaleVal + ', ' + scaleVal + ', 1)');
         image.setAttribute('data-scale', scaleVal);
 
-        image.parentElement.style.left = -x + 'px';
-        image.parentElement.style.top = -y + 'px';
+        if (_this.core.s.useLeftForZoom) {
+            image.parentElement.style.left = -x + 'px';
+            image.parentElement.style.top = -y + 'px';
+        } else {
+            utils.setVendor(image.parentElement, 'Transform', 'translate3d(-' + x + 'px, -' + y + 'px, 0)');
+        }
+
         image.parentElement.setAttribute('data-x', x);
         image.parentElement.setAttribute('data-y', y);
     };
@@ -308,8 +331,14 @@ Zoom.prototype.zoomSwipe = function() {
                 }
 
                 if ((Math.abs(endCoords.x - startCoords.x) > 15) || (Math.abs(endCoords.y - startCoords.y) > 15)) {
-                    _el.style.left = distanceX + 'px';
-                    _el.style.top = distanceY + 'px';
+
+                    if (_this.core.s.useLeftForZoom) {
+                        _el.style.left = distanceX + 'px';
+                        _el.style.top = distanceY + 'px';
+                    } else {
+                        utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
+                    }
+
                 }
 
             }
@@ -407,8 +436,12 @@ Zoom.prototype.zoomDrag = function() {
                 distanceX = -Math.abs(_el.getAttribute('data-x'));
             }
 
-            _el.style.left = distanceX + 'px';
-            _el.style.top = distanceY + 'px';
+            if (_this.core.s.useLeftForZoom) {
+                _el.style.left = distanceX + 'px';
+                _el.style.top = distanceY + 'px';
+            } else {
+                utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
+            }
         }
     });
 
@@ -478,8 +511,12 @@ Zoom.prototype.touchendZoom = function(startCoords, endCoords, allowX, allowY) {
             distanceX = -Math.abs(_el.getAttribute('data-x'));
         }
 
-        _el.style.left = distanceX + 'px';
-        _el.style.top = distanceY + 'px';
+        if (_this.core.s.useLeftForZoom) {
+            _el.style.left = distanceX + 'px';
+            _el.style.top = distanceY + 'px';
+        } else {
+            utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
+        }
 
     }
 };
