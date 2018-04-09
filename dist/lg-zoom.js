@@ -1,9 +1,9 @@
 /**!
- * lg-zoom.js | 1.0.1 | December 22nd 2016
+ * lg-zoom.js | 1.0.1 | April 3rd 2018
  * http://sachinchoolur.github.io/lg-zoom.js
  * Copyright (c) 2016 Sachin N; 
  * @license GPLv3 
- */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.LgZoom = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+ */(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.LgZoom = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (global, factory) {
     if (typeof define === "function" && define.amd) {
         define([], factory);
@@ -65,9 +65,12 @@
             this.zoomabletimeout = false;
 
             // Set the initial value center
-            this.pageX = window.innerWidth / 2;
-            this.pageY = window.innerHeight / 2 + (document.documentElement.scrollTop || document.body.scrollTop);
+            this.pageX = window.innerWidth;
+            this.pageY = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
         }
+
+        this.currentX = 0;
+        this.currentY = 0;
 
         return this;
     };
@@ -121,31 +124,45 @@
         var zoom = function zoom(scaleVal) {
 
             var image = _this.core.outer.querySelector('.lg-current .lg-image');
-            var _x;
-            var _y;
+            // Set this each zoom, because changing slides wipes out the style of the element
+            // So we'd lose it if we set it only when the slide is first loaded
+            image.style['transform-origin'] = '50%';
 
-            // Find offset manually to avoid issue after zoom
-            var offsetX = (window.innerWidth - image.clientWidth) / 2;
-            var offsetY = (window.innerHeight - image.clientHeight) / 2 + (document.documentElement.scrollTop || document.body.scrollTop);
+            var imageWrap = image.parentElement;
 
-            _x = _this.pageX - offsetX;
-            _y = _this.pageY - offsetY;
+            var x = parseInt(imageWrap.getAttribute('data-x'), 10) || 0;
+            var y = parseInt(imageWrap.getAttribute('data-y'), 10) || 0;
 
-            var x = (scaleVal - 1) * _x;
-            var y = (scaleVal - 1) * _y;
-
+            var oldWidth = image.getBoundingClientRect().width;
+            var oldHeight = image.getBoundingClientRect().height;
+            var oldScale = parseInt(image.getAttribute('data-scale'), 10);
             utils.setVendor(image, 'Transform', 'scale3d(' + scaleVal + ', ' + scaleVal + ', 1)');
             image.setAttribute('data-scale', scaleVal);
+            var newWidth = oldWidth + (oldScale > scale ? -image.offsetWidth : image.offsetWidth);
+            var newHeight = oldHeight + (oldScale > scale ? -image.offsetHeight : image.offsetHeight);
 
-            if (_this.core.s.useLeftForZoom) {
-                image.parentElement.style.left = -x + 'px';
-                image.parentElement.style.top = -y + 'px';
-            } else {
-                utils.setVendor(image.parentElement, 'Transform', 'translate3d(-' + x + 'px, -' + y + 'px, 0)');
+            var oldXAsPercentOfOldWidth = x / oldWidth * 100;
+            var newX = newWidth / 100 * oldXAsPercentOfOldWidth || 0;
+            var oldYAsPercentOfOldHeight = y / oldHeight * 100;
+            var newY = newHeight / 100 * oldYAsPercentOfOldHeight || 0;
+
+            if (Math.abs(newX) > newWidth / 2) {
+                newX = (newX < 0 ? -newWidth : newWidth) / 2;
             }
 
-            image.parentElement.setAttribute('data-x', x);
-            image.parentElement.setAttribute('data-y', y);
+            if (Math.abs(newY) > newHeight / 2) {
+                newY = (newY < 0 ? -newHeight : newHeight) / 2;
+            }
+
+            if (_this.core.s.useLeftForZoom) {
+                imageWrap.style.left = newX + 'px';
+                imageWrap.style.top = newY + 'px';
+            } else {
+                utils.setVendor(imageWrap, 'Transform', 'translate3d(' + newX + 'px, ' + newY + 'px, 0)');
+            }
+
+            imageWrap.setAttribute('data-x', newX);
+            imageWrap.setAttribute('data-y', newY);
         };
 
         var callScale = function callScale() {
@@ -183,8 +200,8 @@
             }
 
             if (fromIcon) {
-                _this.pageX = window.innerWidth / 2;
-                _this.pageY = window.innerHeight / 2 + (document.documentElement.scrollTop || document.body.scrollTop);
+                _this.pageX = window.innerWidth;
+                _this.pageY = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
             } else {
                 _this.pageX = event.pageX || event.targetTouches[0].pageX;
                 _this.pageY = event.pageY || event.targetTouches[0].pageY;
@@ -232,8 +249,8 @@
 
         // Update zoom on resize and orientationchange
         utils.on(window, 'resize.lgzoom scroll.lgzoom orientationchange.lgzoom', function () {
-            _this.pageX = window.innerWidth / 2;
-            _this.pageY = window.innerHeight / 2 + (document.documentElement.scrollTop || document.body.scrollTop);
+            _this.pageX = window.innerWidth;
+            _this.pageY = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
             zoom(scale);
         });
 
@@ -289,9 +306,9 @@
             }
         }
 
-        // Reset pagx pagy values to center
-        this.pageX = window.innerWidth / 2;
-        this.pageY = window.innerHeight / 2 + (document.documentElement.scrollTop || document.body.scrollTop);
+        // Reset pageX pageY values to center
+        this.pageX = window.innerWidth;
+        this.pageY = window.innerHeight + (document.documentElement.scrollTop || document.body.scrollTop);
     };
 
     Zoom.prototype.zoomSwipe = function () {
@@ -382,7 +399,7 @@
                     if (isMoved) {
                         isMoved = false;
                         utils.removeClass(_this.core.outer, 'lg-zoom-dragging');
-                        _this.touchendZoom(startCoords, endCoords, allowX, allowY);
+                        _this.touchendZoom(allowX, allowY);
                     }
                 }
             });
@@ -450,16 +467,18 @@
                 // reset opacity and transition duration
                 utils.addClass(_this.core.outer, 'lg-zoom-dragging');
 
+                var nextY = parseInt(_el.getAttribute('data-y'), 10) + (endCoords.y - startCoords.y);
                 if (allowY) {
-                    distanceY = -Math.abs(_el.getAttribute('data-y')) + (endCoords.y - startCoords.y);
+                    distanceY = nextY;
                 } else {
-                    distanceY = -Math.abs(_el.getAttribute('data-y'));
+                    distanceY = _this.currentY;
                 }
 
+                var nextX = parseInt(_el.getAttribute('data-x'), 10) + (endCoords.x - startCoords.x);
                 if (allowX) {
-                    distanceX = -Math.abs(_el.getAttribute('data-x')) + (endCoords.x - startCoords.x);
+                    distanceX = nextX;
                 } else {
-                    distanceX = -Math.abs(_el.getAttribute('data-x'));
+                    distanceX = _this.currentX;
                 }
 
                 if (_this.core.s.useLeftForZoom) {
@@ -468,6 +487,9 @@
                 } else {
                     utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
                 }
+
+                _this.currentX = distanceX;
+                _this.currentY = distanceY;
             }
         });
 
@@ -483,7 +505,7 @@
                         x: e.pageX,
                         y: e.pageY
                     };
-                    _this.touchendZoom(startCoords, endCoords, allowX, allowY);
+                    _this.touchendZoom(allowX, allowY);
                 }
 
                 isMoved = false;
@@ -494,53 +516,41 @@
         });
     };
 
-    Zoom.prototype.touchendZoom = function (startCoords, endCoords, allowX, allowY) {
+    Zoom.prototype.touchendZoom = function (allowX, allowY) {
 
         var _this = this;
         var _el = _this.core.___slide[_this.core.index].querySelector('.lg-img-wrap');
         var image = _this.core.___slide[_this.core.index].querySelector('.lg-object');
-        var distanceX = -Math.abs(_el.getAttribute('data-x')) + (endCoords.x - startCoords.x);
-        var distanceY = -Math.abs(_el.getAttribute('data-y')) + (endCoords.y - startCoords.y);
-        var minY = (_this.core.outer.querySelector('.lg').clientHeight - image.offsetHeight) / 2;
-        var maxY = Math.abs(image.offsetHeight * Math.abs(image.getAttribute('data-scale')) - _this.core.outer.querySelector('.lg').clientHeight + minY);
-        var minX = (_this.core.outer.querySelector('.lg').clientWidth - image.offsetWidth) / 2;
-        var maxX = Math.abs(image.offsetWidth * Math.abs(image.getAttribute('data-scale')) - _this.core.outer.querySelector('.lg').clientWidth + minX);
+        var distanceX = _this.currentX;
+        var distanceY = _this.currentY;
+        var minY = (image.offsetHeight * Math.abs(image.getAttribute('data-scale')) - _this.core.outer.querySelector('.lg').clientHeight) / 2;
+        var maxY = -minY;
+        var minX = (image.offsetWidth * Math.abs(image.getAttribute('data-scale')) - _this.core.outer.querySelector('.lg').clientWidth) / 2;
+        var maxX = -minX;
 
-        if (Math.abs(endCoords.x - startCoords.x) > 15 || Math.abs(endCoords.y - startCoords.y) > 15) {
-            if (allowY) {
-                if (distanceY <= -maxY) {
-                    distanceY = -maxY;
-                } else if (distanceY >= -minY) {
-                    distanceY = -minY;
-                }
+        if (allowY) {
+            if (distanceY <= maxY) {
+                distanceY = maxY;
+            } else if (distanceY >= minY) {
+                distanceY = minY;
             }
+            _el.setAttribute('data-y', distanceY);
+        }
 
-            if (allowX) {
-                if (distanceX <= -maxX) {
-                    distanceX = -maxX;
-                } else if (distanceX >= -minX) {
-                    distanceX = -minX;
-                }
+        if (allowX) {
+            if (distanceX <= maxX) {
+                distanceX = maxX;
+            } else if (distanceX >= minX) {
+                distanceX = minX;
             }
+            _el.setAttribute('data-x', distanceX);
+        }
 
-            if (allowY) {
-                _el.setAttribute('data-y', Math.abs(distanceY));
-            } else {
-                distanceY = -Math.abs(_el.getAttribute('data-y'));
-            }
-
-            if (allowX) {
-                _el.setAttribute('data-x', Math.abs(distanceX));
-            } else {
-                distanceX = -Math.abs(_el.getAttribute('data-x'));
-            }
-
-            if (_this.core.s.useLeftForZoom) {
-                _el.style.left = distanceX + 'px';
-                _el.style.top = distanceY + 'px';
-            } else {
-                utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
-            }
+        if (_this.core.s.useLeftForZoom) {
+            _el.style.left = distanceX + 'px';
+            _el.style.top = distanceY + 'px';
+        } else {
+            utils.setVendor(_el, 'Transform', 'translate3d(' + distanceX + 'px, ' + distanceY + 'px, 0)');
         }
     };
 
