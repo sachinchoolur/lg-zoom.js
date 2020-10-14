@@ -1,5 +1,5 @@
 /**!
- * lg-zoom.js | 1.3.0-beta.0 | October 5th 2020
+ * lg-zoom.js | 1.3.0 | October 14th 2020
  * http://sachinchoolur.github.io/lg-zoom.js
  * Copyright (c) 2016 Sachin N; 
  * @license GPLv3 
